@@ -1,0 +1,70 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+group = 'dev.runefox'
+version = '0.1'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+def canHaveRfxMaven() {
+    if (!project.hasProperty("rfxMavenHost")) {
+        println "Runefox Maven is not available: property rfxMavenHost is not defined"
+        return false
+    }
+    if (!project.hasProperty("rfxMavenUser")) {
+        println "Runefox Maven is not available: property rfxMavenUser is not defined"
+        return false
+    }
+    if (!project.hasProperty("rfxMavenPass")) {
+        println "Runefox Maven is not available: property rfxMavenPass is not defined"
+        return false
+    }
+    println "Runefox Maven is available :D"
+    return true
+}
+
+publishing {
+    publications {
+        proj(MavenPublication) {
+            groupId = project.group
+            artifactId = project.name
+            version = project.version
+
+            from components.java
+        }
+    }
+
+    repositories {
+        if (canHaveRfxMaven()) {
+            maven {
+                name = "RunefoxMaven"
+                url = uri(rfxMavenHost)
+
+                credentials {
+                    username = rfxMavenUser
+                    password = rfxMavenPass
+                }
+            }
+        }
+
+        mavenLocal()
+    }
+}
